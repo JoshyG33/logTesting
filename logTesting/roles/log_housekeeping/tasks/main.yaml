@@ -1,0 +1,46 @@
+---
+#
+- name: Display the ammount of space being utilized on {{ mount_location }} in bytes
+  debug: var=mount_size_used
+
+- name: Display the size available on {{ mount_location }} in bytes
+  debug: var=mount_size_avail
+
+- name: Display the total size of {{ mount_location }} in bytes
+  debug: var=mount_size_total
+
+- name: display the percentage of space being utilized on {{ mount_location }}
+  debug: var="{{percentage_utilized|float|round(2, 'ceil')}}"
+
+- name: display the percentage of free space on {{ mount_location }}
+  debug: var="{{percentage_free|float|round(2, 'ceil')}}"
+
+- name: display the ammount of free space on {{ mount_location }} in MB
+  debug: var="{{mount_size_used_mb|float|round(2, 'ceil')}}"
+
+- name: If the utilization of space exeeds {{ space_utilization_threshold }}% then run the cleanup scripts
+  debug: msg="Utilization of {{ mount_location }} exeeds {{ space_utilization_threshold }}%, performing housekeeping on logs"
+  when: percentage_utilized > (space_utilization_threshold)
+
+- name: Find files
+  find:
+    paths: "{{ mount_location }}"
+    # equal to, or greater than 5 days old
+    age: "{{ file_age }}"
+    # equal to, or greater than 100MB
+    size: "{{ file_size }}"
+    # with the specified file extension
+    patterns: '{{ file_patterns.text }},{{ file_patterns.text_gz}}'
+  register: files_to_delete
+  delegate_to: localhost
+  when: percentage_utilized > (space_utilization_threshold)
+
+# loop through and delete the undesired files from the list
+- name: Remove files
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ files_to_delete.files }}"
+  delegate_to: localhost
+  when: files_to_delete is defined
+

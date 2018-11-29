@@ -1,0 +1,232 @@
+---
+# By default vSwitch0 is created with the 'VM Network' portgroup assigned to it, so we need to remove it so that it can be assigned to vSwitch1
+# This task connects to the to the esxi, finds the given vswitch name, then finds the given portgroup name and with the absent state - removes it
+- name: remove the default VM Network
+  vmware_vmkernel:
+    esxi_hostname: "{{ esxi_ip_address }}"
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    vswitch_name: vSwitch0
+    portgroup_name: VM Network
+    vlan_id: 0
+    network:
+      type: 'static'
+      ip_address: "{{ esxi_ip_address }}"
+      subnet_mask: "{{ esxi_server.netmask }}"
+    state: absent
+  delegate_to: localhost
+
+# adds the VMware Vswitch0, with the accompanying nics
+# as vSwitch0 is already present with vmnic0 assiged to it, it identifies this and just adds vmnic4
+- name: Add VMware vSwitch0
+  action:
+    module: vmware_vswitch
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    switch: vSwitch0
+    nics:
+    - vmnic0
+    - vmnic4
+    mtu: 1500
+    state: present
+  delegate_to: localhost
+
+# adds th Vmotion portgroup to vSwitch0
+- name: Add Vmotion Portgroup to vSwitch0
+  vmware_portgroup:
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    hosts: "{{ esxi_ip_address }}"
+    switch_name: vSwitch0
+    portgroup_name: Vmotion
+    vlan_id: 0
+    network_policy:
+      mac_changes: true
+      promiscuous_mode: false
+      forged_transmits: true
+  delegate_to: localhost
+
+# adds vSwitch1 an assigns vmnic1 and vmnic5 to it
+- name: Add VMware vSwitch1
+  action:
+    module: vmware_vswitch
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    switch: vSwitch1
+    nics:
+    - vmnic1
+    - vmnic5
+    mtu: 1500
+    state: present
+  delegate_to: localhost
+
+# creates VM Network portgroup and assigns it to vSwitch1
+- name: Add VM Network Portgroup to vSwitch1
+  vmware_portgroup:
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    hosts: "{{ esxi_ip_address }}"
+    switch_name: vSwitch1
+    portgroup_name: VM Network
+    vlan_id: 0
+    network_policy:
+      mac_changes: true
+      promiscuous_mode: false
+      forged_transmits: true
+  delegate_to: localhost
+
+# creates vSwitch2 with an mtu of 9000 and assigns  vmnic2 and vmnic6 to it
+- name: Add VMware vSwitch2
+  action:
+    module: vmware_vswitch
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    switch: vSwitch2
+    nics:
+    - vmnic2
+    - vmnic6
+    mtu: 9000
+    state: present
+  delegate_to: localhost
+
+# creates the VSA Network portgroup and assigns it to vSwitch2
+- name: Add VSA Network Portgroup to vSwitch2
+  vmware_portgroup:
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    hosts: "{{ esxi_ip_address }}"
+    switch_name: vSwitch2
+    portgroup_name: VSA Network
+    vlan_id: 0
+    network_policy:
+      mac_changes: true
+      promiscuous_mode: false
+      forged_transmits: true
+  delegate_to: localhost
+
+# creates the ISCSI PATH1 portgroup and assigns it to vSwitch2
+- name: Add ISCSI PATH1 Portgroup to vSwitch2
+  vmware_portgroup:
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    hosts: "{{ esxi_ip_address }}"
+    switch_name: vSwitch2
+    portgroup_name: ISCSI PATH1
+    vlan_id: 0
+    network_policy:
+      mac_changes: true
+      promiscuous_mode: false
+      forged_transmits: true
+  delegate_to: localhost
+
+# creates the ISCSI PATH2 portgroup and assigns it to vSwitch2
+- name: Add ISCSI PATH2 Portgroup to vSwitch2
+  vmware_portgroup:
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    hosts: "{{ esxi_ip_address }}"
+    switch_name: vSwitch2
+    portgroup_name: ISCSI PATH2
+    vlan_id: 0
+    network_policy:
+      mac_changes: true
+      promiscuous_mode: false
+      forged_transmits: true
+  delegate_to: localhost
+
+# creates vSwitch3 and assigns vmnic3 and vmnic7 to it
+- name: Add VMware vSwitch3
+  action:
+    module: vmware_vswitch
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    switch: vSwitch3
+    nics:
+    - vmnic3
+    - vmnic7
+    mtu: 1500
+    state: present
+  delegate_to: localhost
+
+# creates the VM Backup portgroup and assigns it to vSwitch3
+- name: Add VM Backup Portgroup to vSwitch3
+  vmware_portgroup:
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    hosts: "{{ esxi_ip_address }}"
+    switch_name: vSwitch3
+    portgroup_name: VM Backup
+    vlan_id: 0
+    network_policy:
+      mac_changes: true
+      promiscuous_mode: false
+      forged_transmits: true
+  delegate_to: localhost
+
+# Assigning the vmkernels
+# now that the vSwitches and thier respective portgroups and nic connections are established
+# we can now assign the required vmkernels to the ISCSI paths and vmotion
+# (vmk0 is set up by default for the management network)
+
+# this creates vmkernel1 (vmk1) and assigns it to the ISCSI PATH1 potgroup within vSwitch2
+- name: Create vmk1 for ISCSI PATH1
+  vmware_vmkernel:
+    esxi_hostname: "{{ esxi_ip_address }}"
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    vswitch_name: vSwitch2
+    portgroup_name: ISCSI PATH1
+    vlan_id: 0
+    network:
+      type: 'static'
+      ip_address: "{{ vmkernel_ip.vmk1 }}"
+      subnet_mask: "{{ esxi_server.netmask }}"
+    state: present
+  delegate_to: localhost
+
+# this creates vmkernel2 (vmk2) and assigns it to the ISCSI PATH2 potgroup within vSwitch2
+- name: Create vmk2 for ISCSI PATH2
+  vmware_vmkernel:
+    esxi_hostname: "{{ esxi_ip_address }}"
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    vswitch_name: vSwitch2
+    portgroup_name: ISCSI PATH2
+    vlan_id: 0
+    network:
+      type: 'static'
+      ip_address: "{{ vmkernel_ip.vmk2 }}"
+      subnet_mask: "{{ esxi_server.netmask }}"
+    state: present
+  delegate_to: localhost
+
+# this creates vmkernel3 (vmk3) with the Vmotion service enabled  and assigns it to the Vmotion potgroup within vSwitch0
+- name: Create vmk3 for vMotion
+  vmware_vmkernel:
+    esxi_hostname: "{{ esxi_ip_address }}"
+    hostname: "{{ esxi_ip_address }}"
+    username: "{{ esxi_username }}"
+    password: "{{ esxi_password }}"
+    vswitch_name: vSwitch0
+    portgroup_name: Vmotion
+    vlan_id: 0
+    network:
+      type: 'static'
+      ip_address: "{{ vmkernel_ip.vmk3 }}"
+      subnet_mask: "{{ esxi_server.netmask }}"
+    state: present
+    enable_vmotion: True
+  delegate_to: localhost

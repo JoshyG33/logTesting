@@ -1,0 +1,20 @@
+---
+  - name: Include windows vars
+    include_vars: inventory/group_vars/windows/windows.yaml
+
+  - name: Confirm powershell dir structure is available
+    win_file:
+      path: D:\PowerShellScriptsTest\{{ esxi_ip_address }}\logs
+      state: directory
+    delegate_to: "{{ windows_ip }}"
+
+  - name: Generate powershell script from inventory
+    template:
+      src: assets/templates/vswitches_esxi1.j2
+      dest: D:\PowerShellScriptsTest\{{ esxi_ip_address }}\vswitches_esxi1.ps1
+      mode: 0644
+    delegate_to: "{{ windows_ip }}"
+
+  - name: Run the generated script
+    win_shell: D:\PowerShellScriptsTest\{{ esxi_ip_address }}\vswitches_esxi1.ps1 >> D:\PowerShellScriptsTest\{{ esxi_ip_address }}\logs\create_vswitches.log
+    delegate_to: "{{ windows_ip }}"

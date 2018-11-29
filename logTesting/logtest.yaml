@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  gather_facts: yes
+  vars:
+    # gathers the variables through ansible_mounts
+    mount: "{{ ansible_mounts | selectattr('mount','equalto','/var/log') | list | first }}"
+    mount_size_used: "{{ mount.size_total - mount.size_available }}"
+    mount_size_used_mb: "{{ mount_size_used|float / 1000000 }}"
+    mount_size_avail: "{{ mount.size_available }}"
+    mount_size_total: "{{ mount.size_total }}"
+    percentage_free: "{{ mount.size_available / mount.size_total|float * 100 }}"
+    percentage_utilized: "{{ mount_size_used|float / mount.size_total|float * 100 }}"
+  
+  roles:
+    - application_prerequisites
+    - log_housekeeping

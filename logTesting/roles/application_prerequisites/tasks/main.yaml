@@ -1,0 +1,31 @@
+---
+# 1. create:
+#    a. A user group
+- name: Ensure group {{ group_name }}  exists
+  group:
+    name: "{{ group_name }}"
+    state: present
+  delegate_to: localhost
+#    b. A user account
+- name: Add the user {{ user_name }}  with a bash shell, appending the group {{ group_name }}  to the user's groups
+  user:
+    name: "{{ user_name }}"
+    password: "{{ user_password }}"
+    shell: /bin/bash
+    group: "{{ group_name }}"
+    append: yes
+  delegate_to: localhost
+#    c. A directory on the filesystem
+- file:
+    path: "{{ directory_path }}"
+    state: directory
+    mode: 0755
+  delegate_to: localhost
+# modify the permissions and owner of the folder
+- file:
+    path: "{{ directory_path }}"
+    owner: "{{ user_name }}"
+    group: "{{ group_name }}"
+# when specifying mode using octal numbers, add a leading 0
+    mode: 0664
+  delegate_to: localhost

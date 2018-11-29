@@ -1,0 +1,29 @@
+## Log Housekeeping ##
+
+# the filesystem that the mounted directory is linked to
+filesystem: /dev/mapper/vg00-lv_var_log
+
+# the mount location of the stored logs
+mount_location: '/var/log'
+
+# file targeting variables
+# the age of files targeted will be greater than or equal to this value (xd)
+file_age: 5d
+# the size of files targeted will be greater than or equal to this value (b,k,m,g,t)
+#    alternatively use a negative number to find files smaller than or equal to the value (e.g. -2g)
+file_size: 100m
+# targets specified file extensions
+file_patterns: 
+  text: "*.txt"
+  text_gz: "*.txt.gz"
+# the highest percentage of utilization before the logs need to be cleared down
+space_utilization_threshold: 70
+
+
+
+## Application Prerequisites ##
+
+group_name: housekeeping
+user_name: playbook
+user_password: blue0wl
+directory_path: /var/log/test/logs/
