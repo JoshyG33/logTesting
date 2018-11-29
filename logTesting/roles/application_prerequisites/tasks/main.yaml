@@ -21,11 +21,10 @@
     state: directory
     mode: 0755
   delegate_to: localhost
-# modify the permissions and owner of the folder
+#   d. modify the permissions and owner of the folder
 - file:
     path: "{{ directory_path }}"
     owner: "{{ user_name }}"
     group: "{{ group_name }}"
-# when specifying mode using octal numbers, add a leading 0
     mode: 0664
   delegate_to: localhost
